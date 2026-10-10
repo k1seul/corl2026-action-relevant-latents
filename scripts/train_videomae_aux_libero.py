@@ -1,0 +1,237 @@
+"""VideoMAE V1 large + inverse-dynamics aux finetune on LIBERO.
+
+Same recipe as train_webdino_aux_libero.py. DDP-ready.
+
+Usage:
+    CUDA_VISIBLE_DEVICES=2 uv run python scripts/train_videomae_aux_libero.py \\
+        --out-dir runs/comparison/videomae_aux_finetune --batch-size 4
+"""
+from __future__ import annotations
+
+import argparse
+import math
+import os
+import sys
+import time
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "src"))
+
+import torch
+import torch.distributed as dist
+import torch.nn.functional as F
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data import DataLoader, DistributedSampler
+from torch.utils.tensorboard import SummaryWriter
+
+from data.libero_video import worker_init_fn
+from data.build_train_dataset import build_train_dataset, DATASET_CHOICES
+from training.aux_loss import InvDynAuxHead, ForwardDynAuxHead
+
+
+HF_REPO = "MCG-NJU/videomae-large"
+
+# Session-2 STEP 4: forward-dynamics condition uses a non-drifting teacher
+# and predicts stop_grad(z_{t+1}) from (z_t, a_t). Toggled by
+# REBUTTAL_CONDITION=forward_dynamics; every other condition keeps the
+# original InvDynAuxHead + MSE path unchanged.
+_REBUTTAL_CONDITION = os.environ.get("REBUTTAL_CONDITION", "true_id")
+_FORWARD_DYNAMICS = (_REBUTTAL_CONDITION == "forward_dynamics")
+
+
+def is_torchrun(): return "RANK" in os.environ and "WORLD_SIZE" in os.environ
+
+
+def init_distributed():
+    if not is_torchrun(): return False, 0, 1, 0
+    rank=int(os.environ["RANK"]); ws=int(os.environ["WORLD_SIZE"]); lr=int(os.environ["LOCAL_RANK"])
+    dist.init_process_group(backend="nccl", init_method="env://")
+    torch.cuda.set_device(lr)
+    return True, rank, ws, lr
+
+
+def is_rank0(r): return r == 0
+
+
+def encode_frame_features(model, clip: torch.Tensor, native_size: int = 224,
+                            chunk_frames: int = 16, tubelet: int = 2,
+                            patch: int = 16, hidden: int = 1024) -> torch.Tensor:
+    """clip (B,T,C,H,W) [0,1] → (B,T,D). Mirrors VideoMAEExtractor.extract
+    with gradients enabled."""
+    B, T, C, H, W = clip.shape
+    if C > 3:
+        clip = clip[:, :, :3]; C = 3
+    if (H, W) != (native_size, native_size):
+        x = clip.reshape(B * T, C, H, W)
+        x = F.interpolate(x, size=(native_size, native_size), mode="bilinear", align_corners=False)
+        clip = x.reshape(B, T, C, native_size, native_size)
+    pad = (-T) % chunk_frames
+    if pad:
+        last = clip[:, -1:].repeat(1, pad, 1, 1, 1)
+        clip = torch.cat([clip, last], dim=1)
+    T_padded = clip.shape[1]
+    n_chunks = T_padded // chunk_frames
+    chunk_feats = []
+    for i in range(n_chunks):
+        chunk = clip[:, i*chunk_frames:(i+1)*chunk_frames]
+        out = model(chunk)
+        tokens = out.last_hidden_state
+        n_spatial = (native_size // patch) ** 2
+        n_temp = chunk_frames // tubelet
+        tokens = tokens.reshape(B, n_temp, n_spatial, hidden)
+        pooled = tokens.mean(dim=2)
+        per_frame = pooled.repeat_interleave(tubelet, dim=1)
+        chunk_feats.append(per_frame)
+    feats = torch.cat(chunk_feats, dim=1)
+    return feats[:, :T]
+
+
+def lr_schedule(step, warmup, total):
+    if step < warmup: return step / max(1, warmup)
+    p = (step - warmup) / max(1, total - warmup)
+    return 0.1 + 0.9 * 0.5 * (1.0 + math.cos(math.pi * p))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out-dir", required=True)
+    ap.add_argument("--hf-repo", default=HF_REPO)
+    ap.add_argument("--max-steps", type=int, default=20000)
+    ap.add_argument("--warmup-steps", type=int, default=2000)
+    ap.add_argument("--lr", type=float, default=5e-5)
+    ap.add_argument("--weight-decay", type=float, default=0.05)
+    ap.add_argument("--batch-size", type=int, default=4)
+    ap.add_argument("--num-workers", type=int, default=4)
+    ap.add_argument("--clip-len", type=int, default=32)
+    ap.add_argument("--native-image-size", type=int, default=224)
+    ap.add_argument("--aux-lambda", type=float, default=1.0)
+    ap.add_argument("--id-mask-p", type=float, default=1.0,
+                    help="fraction of samples per batch to apply ID loss to (sparsity sweep).")
+    ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--log-interval", type=int, default=200)
+    ap.add_argument("--dataset", choices=DATASET_CHOICES, default="libero")
+    args = ap.parse_args()
+
+    ddp, rank, ws, local_rank = init_distributed()
+    torch.manual_seed(args.seed + rank)
+    device = torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
+
+    out_dir = Path(args.out_dir)
+    if is_rank0(rank):
+        out_dir.mkdir(parents=True, exist_ok=True)
+        writer = SummaryWriter(str(out_dir / "tb"))
+
+    from transformers import AutoModel
+    try:
+        model = AutoModel.from_pretrained(args.hf_repo, dtype=torch.bfloat16)
+    except TypeError:
+        model = AutoModel.from_pretrained(args.hf_repo, torch_dtype=torch.bfloat16)
+    model = model.to(device)
+    for p in model.parameters(): p.requires_grad = True
+    model.train()
+
+    feat_dim = int(model.config.hidden_size)
+    train_ds, action_dim = build_train_dataset(
+        args.dataset, clip_len=args.clip_len, seed=args.seed,
+        resolution=128, return_actions=True)
+
+    if _FORWARD_DYNAMICS:
+        # STEP 4 primary control: forward-dynamics head p(z_t, a_t) → stop_grad(z_{t+1}),
+        # with a frozen initial teacher for the target features.
+        import copy
+        aux_head = ForwardDynAuxHead(in_dim=feat_dim, action_dim=action_dim).to(device)
+        teacher = copy.deepcopy(model).eval()
+        for p in teacher.parameters(): p.requires_grad = False
+        if is_rank0(rank):
+            print(f"[rebuttal] REBUTTAL_CONDITION=forward_dynamics  teacher_mode=frozen_initial", flush=True)
+    else:
+        aux_head = InvDynAuxHead(in_dim=feat_dim, action_dim=action_dim).to(device)
+        teacher = None
+
+    if ddp:
+        model = DDP(model, device_ids=[local_rank], output_device=local_rank, broadcast_buffers=False)
+        aux_head = DDP(aux_head, device_ids=[local_rank], output_device=local_rank)
+
+    if is_rank0(rank):
+        n_enc = sum(p.numel() for p in (model.module if ddp else model).parameters())
+        n_aux = sum(p.numel() for p in (aux_head.module if ddp else aux_head).parameters())
+        print(f"params: enc={n_enc/1e6:.1f}M aux={n_aux/1e6:.1f}M world={ws} batch={args.batch_size}*{ws}={args.batch_size*ws}")
+
+    # train_ds built above
+    sampler = DistributedSampler(train_ds, num_replicas=ws, rank=rank, shuffle=True) if ddp else None
+    loader = DataLoader(
+        train_ds, batch_size=args.batch_size, sampler=sampler, shuffle=(sampler is None),
+        num_workers=args.num_workers, worker_init_fn=worker_init_fn,
+        drop_last=True, pin_memory=True, persistent_workers=args.num_workers > 0,
+    )
+
+    opt = torch.optim.AdamW(
+        [*((model.module if ddp else model).parameters()),
+         *((aux_head.module if ddp else aux_head).parameters())],
+        lr=args.lr, betas=(0.9, 0.95), weight_decay=args.weight_decay,
+    )
+
+    step = 0; t0 = time.time()
+    while step < args.max_steps:
+        for clip, actions in loader:
+            if step >= args.max_steps: break
+            clip = clip.to(device, non_blocking=True)
+            actions = actions.to(device, non_blocking=True)
+
+            cur_lr = args.lr * lr_schedule(step, args.warmup_steps, args.max_steps)
+            for g in opt.param_groups: g["lr"] = cur_lr
+
+            with torch.amp.autocast(device_type=device.type, dtype=torch.bfloat16,
+                                     enabled=device.type == "cuda"):
+                feats = encode_frame_features(model.module if ddp else model, clip,
+                                                native_size=args.native_image_size)
+                if _FORWARD_DYNAMICS:
+                    # Predict stop_grad teacher's z_{t+1} from (online z_t, a_t)
+                    with torch.no_grad():
+                        target_feats = encode_frame_features(
+                            teacher, clip, native_size=args.native_image_size)
+                    pred_next = (aux_head.module if ddp else aux_head)(feats, actions[:, :, :action_dim])
+                    tgt_next = target_feats[:, 1:].detach()
+                    per_sample = (pred_next - tgt_next).pow(2).mean(dim=tuple(range(1, pred_next.ndim)))
+                else:
+                    pred = (aux_head.module if ddp else aux_head)(feats)
+                    target = actions[:, :-1, :action_dim]
+                    per_sample = (pred - target).pow(2).mean(dim=tuple(range(1, pred.ndim)))
+                if args.id_mask_p >= 1.0:
+                    aux_loss = per_sample.mean()
+                else:
+                    B = per_sample.shape[0]
+                    mask = (torch.rand(B, device=per_sample.device) < args.id_mask_p).float()
+                    n_active = mask.sum().clamp(min=1.0)
+                    aux_loss = (per_sample * mask).sum() / n_active
+                loss = args.aux_lambda * aux_loss
+
+            opt.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                [*((model.module if ddp else model).parameters()),
+                 *((aux_head.module if ddp else aux_head).parameters())], 1.0)
+            opt.step()
+
+            if is_rank0(rank) and step % args.log_interval == 0:
+                ips = (step + 1) * args.batch_size * ws / max(1e-6, time.time() - t0)
+                print(f"step {step:6d} | aux {aux_loss.item():.4f} | lr {cur_lr:.2e} | clips/s {ips:.1f}")
+                writer.add_scalar("train/aux", aux_loss.item(), step)
+                writer.add_scalar("train/lr", cur_lr, step)
+            step += 1
+        if ddp and sampler is not None: sampler.set_epoch(step)
+
+    if is_rank0(rank):
+        enc_sd = (model.module if ddp else model).state_dict()
+        aux_sd = (aux_head.module if ddp else aux_head).state_dict()
+        torch.save({"step": step, "encoder": enc_sd, "aux_head": aux_sd, "args": vars(args)},
+                    out_dir / "ckpt_last.pt")
+        writer.close()
+        print(f"done. saved to {out_dir / 'ckpt_last.pt'}")
+    if ddp:
+        dist.barrier(); dist.destroy_process_group()
+
+
+if __name__ == "__main__":
+    main()

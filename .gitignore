@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+datasets/
+external_models/
+runs/*/
+!runs/full_results/
+!runs/corl2026_rebuttal/
+paper_figures/out/
+wandb/
+*.pt
+*.safetensors

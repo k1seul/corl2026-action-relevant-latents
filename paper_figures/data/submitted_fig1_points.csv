@@ -1,0 +1,11 @@
+figure,matched_backbone,legend_group,plotted_psnr_db,plotted_r2,record_frozen_r2,record_id_r2,record_psnr_db,record_psnr_source
+Fig1,V-JEPA 2 ViT-L,video SSL,20.220,0.8500,0.4001,0.8445,20.220,decoder_results.jsonl:vjepa2_aux (decoder on +ID encoder)
+Fig1,V-JEPA 2.1 ViT-B,video SSL,19.960,0.8200,0.4407,0.8203,19.962,decoder_results.jsonl:vjepa2_1_aux (decoder on +ID encoder)
+Fig1,VideoMAE V1 ViT-L,video SSL,20.250,0.7500,0.4566,0.7479,20.247,decoder_results.jsonl:videomae_aux (decoder on +ID encoder)
+Fig1,LAPA-LAQ-OpenX,other,19.840,0.5100,0.4102,0.5101,17.759,decoder_results.jsonl:lapa_aux (decoder on +ID encoder)
+Fig1,SigLIP 2 ViT-L,image SSL,20.550,0.1700,0.0454,0.1663,20.454,decoder_results.jsonl:siglip2_aux (decoder on +ID encoder)
+Fig1,Web-DINO ViT-L,image SSL,20.630,0.1600,-0.0069,0.1587,20.631,decoder_results.jsonl:webdino_aux (decoder on +ID encoder)
+Fig1,DIFF-FULL (action-cond. 200k),pixel fidelity,26.780,-0.0100,,-0.0123,26.776,results.jsonl:A_diff_v10_action_large_200k test_cell.psnr (rollout)
+Fig1,Dreamer 4 276M + ID (agent),other,13.040,-0.0400,,-0.0360,13.050,results.jsonl:dreamer4_xl_aux_agent test_cell.psnr (rollout)
+Fig1,Cosmos-1 tokenizer,pixel fidelity,28.940,-0.2900,-0.3609,-0.2908,23.577,decoder_results.jsonl:cosmos_aux (decoder on +ID encoder)
+Fig1,SDXL VAE,pixel fidelity,30.610,-0.4100,-0.5472,-0.4073,23.828,decoder_results.jsonl:sd3vae_aux (decoder on +ID encoder)

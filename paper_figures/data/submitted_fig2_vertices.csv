@@ -1,0 +1,61 @@
+figure,panel,condition,axis,plotted,record_group_mean,plotted_minus_record
+Fig2,V-JEPA 2 ViT-L,frozen,Trans,0.7800,0.7787,+0.0013
+Fig2,V-JEPA 2 ViT-L,frozen,Rot,-0.0700,-0.0654,-0.0046
+Fig2,V-JEPA 2 ViT-L,frozen,Grip,0.6600,0.6609,-0.0009
+Fig2,V-JEPA 2 ViT-L,+ID,Trans,0.9600,0.9633,-0.0033
+Fig2,V-JEPA 2 ViT-L,+ID,Rot,0.7000,0.6945,+0.0055
+Fig2,V-JEPA 2 ViT-L,+ID,Grip,0.9400,0.9383,+0.0017
+Fig2,V-JEPA 2.1 ViT-B,frozen,Trans,0.7600,0.7625,-0.0025
+Fig2,V-JEPA 2.1 ViT-B,frozen,Rot,0.0900,0.0894,+0.0006
+Fig2,V-JEPA 2.1 ViT-B,frozen,Grip,0.5300,0.5293,+0.0007
+Fig2,V-JEPA 2.1 ViT-B,+ID,Trans,0.9600,0.9565,+0.0035
+Fig2,V-JEPA 2.1 ViT-B,+ID,Rot,0.6500,0.6447,+0.0053
+Fig2,V-JEPA 2.1 ViT-B,+ID,Grip,0.9400,0.9388,+0.0012
+Fig2,VideoMAE V1 ViT-L,frozen,Trans,0.7700,0.7676,+0.0024
+Fig2,VideoMAE V1 ViT-L,frozen,Rot,0.1300,0.1329,-0.0029
+Fig2,VideoMAE V1 ViT-L,frozen,Grip,0.4900,0.4950,-0.0050
+Fig2,VideoMAE V1 ViT-L,+ID,Trans,0.9400,0.9377,+0.0023
+Fig2,VideoMAE V1 ViT-L,+ID,Rot,0.5100,0.5086,+0.0014
+Fig2,VideoMAE V1 ViT-L,+ID,Grip,0.9000,0.8961,+0.0039
+Fig2,Web-DINO ViT-L,frozen,Trans,0.0900,0.0878,+0.0022
+Fig2,Web-DINO ViT-L,frozen,Rot,-0.1500,-0.1545,+0.0045
+Fig2,Web-DINO ViT-L,frozen,Grip,0.1500,0.1520,-0.0020
+Fig2,Web-DINO ViT-L,+ID,Trans,0.4900,0.4883,+0.0017
+Fig2,Web-DINO ViT-L,+ID,Rot,-0.3100,-0.3132,+0.0032
+Fig2,Web-DINO ViT-L,+ID,Grip,0.5900,0.5857,+0.0043
+Fig2,SigLIP 2 ViT-L,frozen,Trans,0.1700,0.1714,-0.0014
+Fig2,SigLIP 2 ViT-L,frozen,Rot,-0.1200,-0.1161,-0.0039
+Fig2,SigLIP 2 ViT-L,frozen,Grip,0.1500,0.1518,-0.0018
+Fig2,SigLIP 2 ViT-L,+ID,Trans,0.4400,0.4383,+0.0017
+Fig2,SigLIP 2 ViT-L,+ID,Rot,-0.2700,-0.2697,-0.0003
+Fig2,SigLIP 2 ViT-L,+ID,Grip,0.6600,0.6586,+0.0014
+Fig2,LAPA-LAQ-OpenX,frozen,Trans,0.7100,0.7099,+0.0001
+Fig2,LAPA-LAQ-OpenX,frozen,Rot,0.0900,0.0862,+0.0038
+Fig2,LAPA-LAQ-OpenX,frozen,Grip,0.4800,0.4828,-0.0028
+Fig2,LAPA-LAQ-OpenX,+ID,Trans,0.8600,0.8650,-0.0050
+Fig2,LAPA-LAQ-OpenX,+ID,Rot,0.1300,0.1322,-0.0022
+Fig2,LAPA-LAQ-OpenX,+ID,Grip,0.5800,0.5790,+0.0010
+Fig2,DIFF (L1),frozen,Trans,0.7200,0.7208,-0.0008
+Fig2,DIFF (L1),frozen,Rot,0.0300,0.0251,+0.0049
+Fig2,DIFF (L1),frozen,Grip,0.7400,0.7420,-0.0020
+Fig2,DIFF (L1),+ID,Trans,0.8900,0.8865,+0.0035
+Fig2,DIFF (L1),+ID,Rot,0.2900,0.2868,+0.0032
+Fig2,DIFF (L1),+ID,Grip,0.8900,0.8847,+0.0053
+Fig2,SDXL VAE,frozen,Trans,-0.1000,-0.0972,-0.0028
+Fig2,SDXL VAE,frozen,Rot,-1.0600,-1.0636,+0.0036
+Fig2,SDXL VAE,frozen,Grip,-0.3500,-0.3479,-0.0021
+Fig2,SDXL VAE,+ID,Trans,-0.0100,-0.0105,+0.0005
+Fig2,SDXL VAE,+ID,Rot,-0.8700,-0.8654,-0.0046
+Fig2,SDXL VAE,+ID,Grip,-0.2200,-0.2235,+0.0035
+Fig2,Cosmos-1 tokenizer,frozen,Trans,-0.1500,-0.1541,+0.0041
+Fig2,Cosmos-1 tokenizer,frozen,Rot,-0.5800,-0.5838,+0.0038
+Fig2,Cosmos-1 tokenizer,frozen,Grip,-0.3100,-0.3128,+0.0028
+Fig2,Cosmos-1 tokenizer,+ID,Trans,0.0100,0.0057,+0.0043
+Fig2,Cosmos-1 tokenizer,+ID,Rot,-0.6500,-0.6548,+0.0048
+Fig2,Cosmos-1 tokenizer,+ID,Grip,-0.0900,-0.0884,-0.0016
+Fig2,Dreamer 4,frozen,Trans,-0.0300,-0.0254,-0.0046
+Fig2,Dreamer 4,frozen,Rot,-0.0600,-0.0573,-0.0027
+Fig2,Dreamer 4,frozen,Grip,-0.0300,-0.0251,-0.0049
+Fig2,Dreamer 4,+ID,Trans,-0.0300,-0.0250,-0.0050
+Fig2,Dreamer 4,+ID,Rot,-0.0600,-0.0579,-0.0021
+Fig2,Dreamer 4,+ID,Grip,-0.0300,-0.0248,-0.0052

@@ -1,0 +1,224 @@
+- base_model: vjepa2
+  variant: vjepa2_frozen_calvin
+  family: vjepa2
+  objective: frozen (vjepa2)
+  seq_len: 32
+  n_params_million: 304.0
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  arch: vit_large
+  img_size: 256
+  num_frames: 32
+- base_model: vjepa2
+  variant: vjepa2_aux_calvin
+  family: vjepa2
+  objective: vjepa2 + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 304.0
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/vjepa2_aux_calvin/ckpt_last.pt
+  arch: vit_large
+  img_size: 256
+  num_frames: 32
+- base_model: vjepa2_1
+  variant: vjepa2_1_frozen_calvin
+  family: vjepa2_1
+  objective: frozen (vjepa2_1)
+  seq_len: 32
+  n_params_million: 86.0
+  model_size: vit_base
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  arch: vit_base
+  img_size: 384
+  ckpt_key: ema_encoder
+  num_frames: 32
+- base_model: vjepa2_1
+  variant: vjepa2_1_aux_calvin
+  family: vjepa2_1
+  objective: vjepa2_1 + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 86.0
+  model_size: vit_base
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/vjepa2_1_aux_calvin/ckpt_last.pt
+  arch: vit_base
+  img_size: 384
+  ckpt_key: ema_encoder
+  num_frames: 32
+- base_model: webdino
+  variant: webdino_frozen_calvin
+  family: webdino
+  objective: frozen (webdino)
+  seq_len: 32
+  n_params_million: 303.7
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  img_size: 224
+  hf_repo: facebook/webssl-dino300m-full2b-224
+  num_frames: 32
+- base_model: webdino
+  variant: webdino_aux_calvin
+  family: webdino
+  objective: webdino + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 303.7
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/webdino_aux_calvin/ckpt_last.pt
+  img_size: 224
+  hf_repo: facebook/webssl-dino300m-full2b-224
+  num_frames: 32
+- base_model: siglip2
+  variant: siglip2_frozen_calvin
+  family: siglip2
+  objective: frozen (siglip2)
+  seq_len: 32
+  n_params_million: 303.5
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  img_size: 256
+  hf_repo: google/siglip2-large-patch16-256
+  num_frames: 32
+- base_model: siglip2
+  variant: siglip2_aux_calvin
+  family: siglip2
+  objective: siglip2 + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 303.5
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/siglip2_aux_calvin/ckpt_last.pt
+  img_size: 256
+  hf_repo: google/siglip2-large-patch16-256
+  num_frames: 32
+- base_model: videomae
+  variant: videomae_frozen_calvin
+  family: videomae
+  objective: frozen (videomae)
+  seq_len: 32
+  n_params_million: 303.9
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  img_size: 224
+  hf_repo: MCG-NJU/videomae-large
+  num_frames: 32
+- base_model: videomae
+  variant: videomae_aux_calvin
+  family: videomae
+  objective: videomae + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 303.9
+  model_size: vit_large
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/videomae_aux_calvin/ckpt_last.pt
+  img_size: 224
+  hf_repo: MCG-NJU/videomae-large
+  num_frames: 32
+- base_model: lapa
+  variant: lapa_frozen_calvin
+  family: lapa
+  objective: frozen (lapa)
+  seq_len: 32
+  n_params_million: 344.0
+  model_size: 344M
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  img_size: 256
+  num_frames: 32
+- base_model: lapa
+  variant: lapa_aux_calvin
+  family: lapa
+  objective: lapa + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 344.0
+  model_size: 344M
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/lapa_aux_calvin/ckpt_last.pt
+  img_size: 256
+  num_frames: 32
+- base_model: sd3vae
+  variant: sdvae_frozen_calvin
+  family: sd3vae
+  objective: frozen (sdvae)
+  seq_len: 32
+  n_params_million: 83.7
+  model_size: sdxl_vae
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  img_size: 128
+  hf_repo: stabilityai/sdxl-vae
+  num_frames: 32
+- base_model: sd3vae
+  variant: sdvae_aux_calvin
+  family: sd3vae
+  objective: sd3vae + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 83.7
+  model_size: sdxl_vae
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/sd3vae_aux_calvin/ckpt_last.pt
+  img_size: 128
+  hf_repo: stabilityai/sdxl-vae
+  num_frames: 32
+- base_model: cosmos_tokenizer
+  variant: cosmos_tokenizer_frozen_calvin
+  family: cosmos_tokenizer
+  objective: frozen (cosmos_tokenizer)
+  seq_len: 32
+  n_params_million: 9.0
+  model_size: cosmos1_8x8x8
+  n_cams: 1
+  action_dim: 0
+  pretrained: official pretrain
+  ckpt: null
+  img_size: 128
+  hf_repo: nvidia/Cosmos-Tokenizer-CV8x8x8
+  num_frames: 32
+- base_model: cosmos_tokenizer
+  variant: cosmos_tokenizer_aux_calvin
+  family: cosmos_tokenizer
+  objective: cosmos_tokenizer + InvDynAuxHead λ=1.0 on CALVIN
+  seq_len: 32
+  n_params_million: 9.0
+  model_size: cosmos1_8x8x8
+  n_cams: 1
+  action_dim: 0
+  pretrained: official + CALVIN aux finetune
+  ckpt: runs/comparison/cosmos_tokenizer_aux_calvin/ckpt_last.pt
+  img_size: 128
+  hf_repo: nvidia/Cosmos-Tokenizer-CV8x8x8
+  num_frames: 32

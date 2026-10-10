@@ -1,0 +1,81 @@
+# CoRL 2026 rebuttal — matched-control run manifest (PREDECLARED)
+#
+# This manifest freezes the (backbone × condition × seed) grid BEFORE any long
+# job runs, per instruction §2 rule 7 (no post-hoc cherry-picking). Do not
+# modify this file to reflect completed / failed jobs; those are recorded in
+# provenance.json files under runs/corl2026_rebuttal/checkpoints/**.
+#
+# All conditions within a backbone MUST share:
+#   * max_steps
+#   * effective_batch
+#   * optimizer + lr_schedule
+#   * augmentation pipeline (defined by the backbone's train_*_aux.py)
+#   * frozen-checkpoint provenance (same starting weights)
+#
+# The 'frozen' condition is not a training run; it re-uses the same starting
+# weights and runs feature extraction + canonical probe only.
+
+common:
+  max_steps: 20000
+  effective_batch: 16
+  optimizer: adamw
+  lr_schedule: cosine_warmup2000
+  probe_steps: 3000
+  probe_seeds: [0, 1, 2]
+  # 2 training seeds if wall-clock permits; else 1 (predeclared) + probe seeds
+  training_seeds: [0, 1]
+  # Primary shuffled-ID control (session-2 STEP 3): draw actions from a
+  # different episode of the SAME task via a deterministic derangement.
+  # Adjacent-action correlation makes circular shifting a weak control;
+  # it is retained ONLY as the secondary sensitivity below.
+  shuffle_mode: within_task_cross_episode_derangement
+
+# Primary training conditions per backbone. ``shuffled_id`` is now the
+# within-task cross-episode derangement (see src/rebuttal/derangement.py).
+# The circular-shift form is submitted only under the ``sensitivity`` block.
+backbones:
+  vjepa2:
+    train_script: scripts/train_vjepa2_aux.py
+    frozen_source: external_models/vjepa2_ckpts/vitl.pt
+    conditions: [frozen, true_id, shuffled_id, forward_dynamics]
+    batch_size: 4
+    lr: 5.0e-5
+
+  videomae:
+    train_script: scripts/train_videomae_aux_libero.py
+    frozen_source: external_models/videomae/checkpoint.pth
+    conditions: [frozen, true_id, shuffled_id, forward_dynamics]
+    batch_size: 2
+    lr: 5.0e-5
+
+  webdino:
+    train_script: scripts/train_webdino_aux_libero.py
+    frozen_source: external_models/webdino/webdino_vitl.pt
+    conditions: [frozen, true_id, shuffled_id, forward_dynamics]
+    batch_size: 4
+    lr: 5.0e-5
+
+# Secondary sensitivity conditions — reported in an additional labeled column,
+# never in the primary matched-control cell.
+sensitivity:
+  shuffled_id_circular_sensitivity:
+    enabled: false            # enable only if wall-clock permits, seed 0 only
+    shuffle_min_abs: 2
+    note: "Circular shift within an episode. Adjacent-action correlation
+           weakens this control; report only as sensitivity."
+
+# Secondary optional condition — only launched after all 4 primaries per
+# backbone complete on at least seed 0.
+optional:
+  action_free_adaptation:
+    enabled: false
+    projector_hidden: 512
+    projector_out: 128
+    augmentation: "color_jitter + random_resize_crop_0.9-1.0"
+
+# Predeclared eval matrix (per backbone × condition × training_seed):
+#   * probe seeds 0,1,2 on canonical z_t -> a_t MLP
+#   * clean task-OOD R2 (aggregate + per-dim)
+#   * perturbation matrix (8 perturbations from
+#     runs/full_results/perturbation/robustness_table_all84.csv)
+#   * paired episode-bootstrap 95% CIs for the deltas listed in §4.8
