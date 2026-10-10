@@ -74,17 +74,24 @@ The probe is trained on clean features and evaluated on perturbed inputs. "Worst
 
 | Auxiliary target | Spat. | Obj. | Goal | L10 | Avg. | Lang. | Pos. | Obj. | Task | Env. | PRO All |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| None (π0.5 baseline) | 96 | **99** | **97** | 80 | 93.0 | 65 | 8 | 79 | 15 | 47 | 68.7 |
+| None (π0.5 baseline) | 96 | 99 | 97 | 80 | 93.0 | 65 | 8 | 79 | 15 | 47 | 68.7 |
 | *Clip coupling (normalized L2, weight 0.1)* | | | | | | | | | | | |
-| DIFF + ID | 96 | 98 | 93 | **88** | **93.8** | 63 | **24** | **85** | 16 | 55 | **69.0** |
-| — policy seed 1 | – | – | – | – | – | 57 | 18 | 69 | 12 | 52 | 65.1 |
-| — batch-shuffled target | 96 | **99** | 83 | 78 | 89.0 | 65 | 15 | 81 | 15 | **60** | 65.8 |
-| — random-init encoder | 95 | 98 | 94 | 87 | 93.5 | **72** | 14 | 82 | **25** | 48 | 67.6 |
+| DIFF + ID † | 96 | 98 | 93 | 88 | **93.8** | 63 | **24** | 85 | 16 | 55 | **69.0** |
+| — batch-shuffled target | 96 | 99 | 83 | 78 | 89.0 | 65 | 15 | 81 | 15 | 60 | 65.8 |
+| — random-init encoder | 95 | 98 | 94 | 87 | 93.5 | 72 | 14 | 82 | 25 | 48 | 67.6 |
 | *Token coupling (cosine)* | | | | | | | | | | | |
 | V-JEPA 2 + ID (weight 0.01) | 95 | 98 | 90 | 78 | 90.2 | 54 | 23 | 79 | 19 | 55 | 67.5 |
-| — weight 0.05 | 97 | **99** | 82 | 86 | 91.0 | 71 | 8 | 80 | 18 | 47 | 65.8 |
-| Web-DINO (weight 0.01) | **99** | 98 | 91 | 86 | 93.5 | 56 | 14 | 83 | 16 | 54 | 65.0 |
+| Web-DINO (weight 0.01) | 99 | 98 | 91 | 86 | 93.5 | 56 | 14 | 83 | 16 | 54 | 65.0 |
 
-One policy seed per row (the second DIFF + ID seed was evaluated on LIBERO-PRO only) and no uncertainty estimates, so the differences are descriptive. Two learned targets improve the LIBERO-10 position shift over the baseline, but no target shows a clear gain in aggregate out-of-distribution success, and the effects are sensitive to the policy seed and the auxiliary weight. The two couplings also differ in loss and weight, so the groups are not a controlled comparison of target encoders.
+All rows are policy seed 0. † A second DIFF + ID policy seed, evaluated only on LIBERO-PRO, reaches Pos. 18 and PRO All 65.1. Bold marks the best observed value in the three headline columns (LIBERO Avg., L10 Pos., PRO All); these are single-run comparisons without uncertainty estimates.
+
+Two further runs are reported in Appendix N of the paper:
+
+| Run | Spat. | Obj. | Goal | L10 | Avg. | Lang. | Pos. | Obj. | Task | Env. | PRO All |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| DIFF + ID, policy seed 1 | – | – | – | – | – | 57 | 18 | 69 | 12 | 52 | 65.1 |
+| V-JEPA 2 + ID, weight 0.05 | 97 | 99 | 82 | 86 | 91.0 | 71 | 8 | 80 | 18 | 47 | 65.8 |
+
+Two learned targets improve the LIBERO-10 position shift over the baseline, but no target shows a clear gain in aggregate out-of-distribution success, and the effects are sensitive to the policy seed and the auxiliary weight. The two couplings also differ in loss and weight, so the groups are not a controlled comparison of target encoders.
 
 Success counts: [`results/closed_loop_success_by_suite.csv`](results/closed_loop_success_by_suite.csv) and [`results/closed_loop_success_by_task.csv`](results/closed_loop_success_by_task.csv). `python closed_loop/summarize.py --csv results/closed_loop_success_by_suite.csv` prints this table.
