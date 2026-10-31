@@ -31,6 +31,12 @@ python closed_loop/summarize.py runs/closed_loop_eval/clip_s0
 
 `eval.sh` runs LIBERO (perturbation `none`) and the five LIBERO-PRO perturbations on the four suites, 10 tasks × 10 trials each, replanning every 5 steps with 10 denoising steps. LIBERO-PRO perturbations are applied to the BDDL task files by `perturbation.py` with the configurations in `libero_ood/`, adapted from [LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO). The environment perturbation splits each task's trials over all candidate environments. Per-episode seeds are fixed (`seed × 10000 + task × 100 + episode` with a scene seed of 0), so `--seed` does not change the rollouts.
 
+| Original layout | LIBERO-PRO position shift |
+|---|---|
+| ![original](assets/libero10_task2_original.png) | ![position shift](assets/libero10_task2_position_shift.png) |
+
+LIBERO-10 task 2 ("turn on the stove and put the moka pot on it"), first policy step of episode 0. The position shift swaps the start regions of the moka pot and the frying pan, and the scene is re-sampled with the fixed seed instead of using LIBERO's stored initial states. Rendered with `closed_loop/scripts/render_position_shift.py`.
+
 ## Differences from the code that produced Table 4
 
 This is a reduced version of the training script used for the paper, limited to the configurations in Table 4.
